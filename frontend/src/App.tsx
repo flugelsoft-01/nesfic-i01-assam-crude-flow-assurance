@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Activity,
   Beaker,
+  BookOpen,
   CheckCircle2,
   Droplets,
   Flame,
@@ -58,13 +59,14 @@ async function fetchJsonOrFallback<T>(url: string, init: RequestInit | undefined
   }
 }
 
-type TabKey = 'simulator' | 'chemistries' | 'lab' | 'admin';
+type TabKey = 'simulator' | 'chemistries' | 'lab' | 'admin' | 'tutorial';
 
 const TAB_SLUGS: Record<TabKey, string> = {
   simulator: 'upper-assam-flow-assurance-digital-twin',
   chemistries: 'indigenous-ppd-demulsifier-chemistries',
   lab: 'assam-lab-screening-sop',
   admin: 'admin-control-center',
+  tutorial: 'tutorial-and-user-guide',
 };
 
 const DEFAULT_PILOT_CONFIG: PilotSiteConfig = {
@@ -111,6 +113,7 @@ export default function App() {
     if (hash === TAB_SLUGS.chemistries) return 'chemistries';
     if (hash === TAB_SLUGS.lab) return 'lab';
     if (hash === TAB_SLUGS.admin) return 'admin';
+    if (hash === TAB_SLUGS.tutorial) return 'tutorial';
     return 'simulator';
   });
   const [role, setRole] = useState<UserRole>('PSU Pilot Admin');
@@ -373,6 +376,17 @@ export default function App() {
             }}
           >
             <ShieldCheck size={16} /> Admin Console
+          </a>
+          <a
+            href={`#${TAB_SLUGS.tutorial}`}
+            className={`nav-tab ${activeTab === 'tutorial' ? 'active' : ''}`}
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => {
+              e.preventDefault();
+              switchTab('tutorial');
+            }}
+          >
+            <BookOpen size={16} /> Tutorial
           </a>
           <select
             className="role-select"
@@ -870,6 +884,75 @@ export default function App() {
             onRecalibrateModel={handleRecalibrateModel}
           />
         )}
+
+        {activeTab === 'tutorial' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <section className="card">
+              <h2 className="card-title">What is ParaFlow-NE? (NESFIC-I-01)</h2>
+              <p style={{ margin: '0 0 0.75rem', color: '#334155' }}>
+                <strong>ParaFlow-NE</strong> is an indigenous chemical-formulation and flow-assurance digital twin
+                built by <strong>Flugelsoft Labs</strong> (Lead Applicant: <strong>Kalyanjit Hatibaruah</strong>) for
+                high-wax North-East India crude oils (Upper Assam, Arunachal Pradesh, and Tripura).
+              </p>
+              <p style={{ margin: 0, color: '#334155' }}>
+                During winter (&lt;4°C), high-paraffin crude can solidify inside pipelines, while tight water-in-oil
+                emulsions force Group Gathering Stations (GGSs) to burn fuel gas heating treaters to 65–70°C.
+                ParaFlow-NE pairs <strong>indigenous sub-4°C Pour Point Depressants (PPDs)</strong> and{' '}
+                <strong>low-temperature demulsifiers</strong> with a real-time simulator and lab screening workflow to
+                cut fuel-gas use, prevent winter gelation, and lower landed chemical costs vs. imported additives.
+              </p>
+            </section>
+
+            <section className="admin-grid-2">
+              <div className="card">
+                <h3 className="card-title">Step 1 · Flow Assurance Digital Twin</h3>
+                <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569' }}>
+                  Select a regional crude preset (e.g., <em>Naharkatiya High-Wax</em> or <em>Moran Ageing</em>), set
+                  winter ambient temperature (&lt;4°C) and GGS heater-treater temperature (~40–42°C), and click{' '}
+                  <strong>Auto-Optimize Indigenous Formulation</strong>. Review the 5 KPI cards (Pour Point ≤ 4°C, BS&amp;W
+                  ≤ 0.50%, Restart Pressure, Fuel-Gas/CO₂ Saved, and ₹/tonne Cost) and both live charts.
+                </p>
+              </div>
+
+              <div className="card">
+                <h3 className="card-title">Step 2 · Indigenous Chemistries</h3>
+                <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569' }}>
+                  Browse the Make-in-India portfolio of 3 comb-polymer/CNSL PPDs (<code>PF-PPD-101/204/302</code>) and
+                  3 hyperbranched EO/PO low-temperature demulsifiers (<code>PF-DEM-110/208/305</code>) with molecular
+                  architectures, domestic feedstocks, dosage envelopes, and unit costs.
+                </p>
+              </div>
+
+              <div className="card">
+                <h3 className="card-title">Step 3 · Lab Screening &amp; SOPs</h3>
+                <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569' }}>
+                  Record benchtop <strong>ASTM D5853 Pour Point</strong> and <strong>40°C Bottle Test BS&amp;W</strong>{' '}
+                  results to verify refinery-gate compliance and track reformulation as field water cuts change.
+                </p>
+              </div>
+
+              <div className="card">
+                <h3 className="card-title">Step 4 · Admin Console &amp; RBAC</h3>
+                <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569' }}>
+                  Use the top-bar <strong>Role</strong> selector (<code>PSU Pilot Admin</code>,{' '}
+                  <code>Installation Chemist</code>, <code>GGS Operator</code>) to submit dosing packages for approval,
+                  import crude assay CSVs, adjust additive pricing/telemetry thresholds, recalibrate the QSPR model, and
+                  export audit logs.
+                </p>
+              </div>
+            </section>
+
+            <div>
+              <button
+                className="btn btn-primary"
+                style={{ maxWidth: '280px' }}
+                onClick={() => switchTab('simulator')}
+              >
+                <Activity size={16} /> Launch Flow Assurance Digital Twin
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       <footer className="site-footer" aria-label="Legal, attribution, and regional links">
@@ -909,6 +992,16 @@ export default function App() {
                 }}
               >
                 Assam Lab Screening SOPs
+              </a>
+              <a
+                href={`#${TAB_SLUGS.tutorial}`}
+                title="ParaFlow-NE Tutorial & User Guide"
+                onClick={(e) => {
+                  e.preventDefault();
+                  switchTab('tutorial');
+                }}
+              >
+                Tutorial &amp; User Guide
               </a>
               <a
                 href="https://startup.assam.gov.in/nesfic26/problem-statements/nesfic-i-01"
