@@ -55,7 +55,7 @@ export interface SimulationResponse {
   refinery_spec_compliant: boolean;
   conventional_treating_temp_c: number;
   temp_reduction_c: number;
-  fuel_gas_saved_pct: float;
+  fuel_gas_saved_pct: number;
   energy_saved_mwh_yr: number;
   co2_reduced_tonnes_yr: number;
   landed_cost_inr_per_tonne: number;
@@ -64,8 +64,6 @@ export interface SimulationResponse {
   profile_points: PipelineProfilePoint[];
   emulsion_curve: EmulsionCurvePoint[];
 }
-
-type float = number;
 
 export interface RecommendationResponse {
   recommended_ppd: AdditiveChemistry;
@@ -92,4 +90,41 @@ export interface LabScreeningRecord {
   passed: boolean;
   operator: string;
   notes?: string;
+}
+
+export type UserRole = 'GGS Operator' | 'Installation Chemist' | 'PSU Pilot Admin';
+
+export interface DosingApprovalRequest {
+  id: string;
+  timestamp: string;
+  submitted_by: string;
+  crude_name: string;
+  ppd_id: string;
+  ppd_dosage_ppm: number;
+  dem_id: string;
+  dem_dosage_ppm: number;
+  predicted_pp_c: number;
+  predicted_bsw_pct: number;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  reviewer_note?: string;
+}
+
+export interface PilotSiteConfig {
+  site_name: string;
+  pipe_diameter_in: number;
+  max_pour_point_c: number;
+  max_bsw_pct: number;
+  incumbent_ppd_cost_inr_tonne: number;
+  incumbent_dem_cost_inr_tonne: number;
+  scada_status: 'Connected (OPC-UA)' | 'CSV Batch Mode';
+  calibration_offset_c: number;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actor: string;
+  role: UserRole;
+  action: string;
+  details: string;
 }

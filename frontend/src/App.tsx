@@ -8,6 +8,8 @@ import {
   FlaskConical,
   Gauge,
   IndianRupee,
+  Send,
+  ShieldCheck,
   Sparkles,
   ThermometerSnowflake,
   AlertTriangle,
@@ -25,10 +27,14 @@ import {
 } from 'recharts';
 import type {
   AdditiveChemistry,
+  AuditLogEntry,
   CrudeProfile,
+  DosingApprovalRequest,
   LabScreeningRecord,
+  PilotSiteConfig,
   RecommendationResponse,
   SimulationResponse,
+  UserRole,
 } from './types';
 import {
   CHEMISTRIES,
@@ -37,6 +43,7 @@ import {
   recommendLocally,
   simulateLocally,
 } from './engine';
+import AdminConsole from './components/AdminConsole';
 
 async function fetchJsonOrFallback<T>(url: string, init: RequestInit | undefined, fallback: () => T): Promise<T> {
   try {
@@ -51,21 +58,66 @@ async function fetchJsonOrFallback<T>(url: string, init: RequestInit | undefined
   }
 }
 
-type TabKey = 'simulator' | 'chemistries' | 'lab';
+type TabKey = 'simulator' | 'chemistries' | 'lab' | 'admin';
 
 const TAB_SLUGS: Record<TabKey, string> = {
   simulator: 'upper-assam-flow-assurance-digital-twin',
   chemistries: 'indigenous-ppd-demulsifier-chemistries',
   lab: 'assam-lab-screening-sop',
+  admin: 'admin-control-center',
 };
+
+const DEFAULT_PILOT_CONFIG: PilotSiteConfig = {
+  site_name: 'Upper Assam — Naharkatiya GGS-2 & 12" Trunk Segment',
+  pipe_diameter_in: 12.0,
+  max_pour_point_c: 4.0,
+  max_bsw_pct: 0.5,
+  incumbent_ppd_cost_inr_tonne: 207.0,
+  incumbent_dem_cost_inr_tonne: 28.6,
+  scada_status: 'Connected (OPC-UA)',
+  calibration_offset_c: 0.0,
+};
+
+const INITIAL_APPROVALS: DosingApprovalRequest[] = [
+  {
+    id: 'REQ-GGS2-01',
+    timestamp: '2026-11-26 18:40 IST',
+    submitted_by: 'Dr. R. Borah',
+    crude_name: 'Upper Assam — Naharkatiya High-Wax',
+    ppd_id: 'PF-PPD-101',
+    ppd_dosage_ppm: 180,
+    dem_id: 'PF-DEM-110',
+    dem_dosage_ppm: 15,
+    predicted_pp_c: 1.91,
+    predicted_bsw_pct: 0.285,
+    status: 'Pending',
+  },
+];
+
+const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
+  {
+    id: 'AUD-001',
+    timestamp: '2026-11-26 18:15 IST',
+    actor: 'Kalyanjit Hatibaruah',
+    role: 'PSU Pilot Admin',
+    action: 'Pilot Baseline Initialized',
+    details: 'Configured Upper Assam GGS-2 winter target (PP ≤ 4.0°C, BS&W ≤ 0.50%).',
+  },
+];
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     const hash = window.location.hash.replace('#', '');
     if (hash === TAB_SLUGS.chemistries) return 'chemistries';
     if (hash === TAB_SLUGS.lab) return 'lab';
+    if (hash === TAB_SLUGS.admin) return 'admin';
     return 'simulator';
   });
+  const [role, setRole] = useState<UserRole>('PSU Pilot Admin');
+  const [pilotConfig, setPilotConfig] = useState<PilotSiteConfig>(DEFAULT_PILOT_CONFIG);
+  const [approvals, setApprovals] = useState<DosingApprovalRequest[]>(INITIAL_APPROVALS);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
+  const [approvalNotice, setApprovalNotice] = useState('');
   const [presets, setPresets] = useState<CrudeProfile[]>([]);
   const [chemistries, setChemistries] = useState<AdditiveChemistry[]>([]);
   const [selectedCrude, setSelectedCrude] = useState<CrudeProfile | null>(null);
@@ -193,6 +245,76 @@ export default function App() {
     window.history.replaceState(null, '', `#${TAB_SLUGS[tab]}`);
   };
 
+  const appendAudit = (action: string, details: string) => {
+    const entry: AuditLogEntry = {
+      id: `AUD-00${auditLogs.length + 1}`,
+      timestamp: new Date().toLocaleString('en-IN', { hour12: false }),
+      actor: role === 'PSU Pilot Admin' ? 'Kalyanjit Hatibaruah' : role,
+      role,
+      action,
+      details,
+    };
+    setAuditLogs((prev) => [entry, ...prev]);
+  };
+
+  const handleSubmitForApproval = () => {
+    if (!selectedCrude || !simResult) return;
+    const req: DosingApprovalRequest = {
+      id: `REQ-GGS2-0${approvals.length + 1}`,
+      timestamp: new Date().toLocaleString('en-IN', { hour12: false }),
+      submitted_by: role,
+      crude_name: selectedCrude.name,
+      ppd_id: ppdId,
+      ppd_dosage_ppm: ppdDosage,
+      dem_id: demId,
+      dem_dosage_ppm: demDosage,
+      predicted_pp_c: simResult.pour_point_treated_c,
+      predicted_bsw_pct: simResult.bsw_pct,
+      status: 'Pending',
+    };
+    setApprovals((prev) => [req, ...prev]);
+    appendAudit('Dosing Request Submitted', `${req.id}: ${ppdId} (${ppdDosage} ppm) + ${demId} (${demDosage} ppm) for ${selectedCrude.name}`);
+    setApprovalNotice(`Submitted ${req.id} for PSU Pilot Admin sign-off.`);
+    setTimeout(() => setApprovalNotice(''), 4000);
+  };
+
+  const handleResolveApproval = (id: string, decision: 'Approved' | 'Rejected', note: string) => {
+    setApprovals((prev) => prev.map((a) => (a.id === id ? { ...a, status: decision, reviewer_note: note } : a)));
+    appendAudit(`Dosing ${decision}`, `${id}: ${note}`);
+  };
+
+  const handleAddPreset = (crude: CrudeProfile) => {
+    setPresets((prev) => [crude, ...prev]);
+    setSelectedCrude(crude);
+    appendAudit('Crude Assay Added', `${crude.name} (${crude.wax_wt_pct}% wax, ${crude.pour_point_c}°C PP)`);
+  };
+
+  const handleDeletePreset = (id: string) => {
+    setPresets((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      if (selectedCrude?.id === id && next.length > 0) setSelectedCrude(next[0]);
+      return next;
+    });
+    appendAudit('Crude Assay Removed', `Removed preset ID ${id}`);
+  };
+
+  const handleUpdateChemistry = (id: string, cost: number, minPpm: number, maxPpm: number) => {
+    setChemistries((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, unit_cost_inr_per_kg: cost, recommended_dosage_min_ppm: minPpm, recommended_dosage_max_ppm: maxPpm } : c)),
+    );
+    appendAudit('Chemistry Pricing Updated', `${id}: ₹${cost}/kg, ${minPpm}–${maxPpm} ppm`);
+  };
+
+  const handleUpdatePilotConfig = (cfg: PilotSiteConfig) => {
+    setPilotConfig(cfg);
+    appendAudit('Pilot Config Updated', `${cfg.site_name} (PP ≤ ${cfg.max_pour_point_c}°C, BS&W ≤ ${cfg.max_bsw_pct}%)`);
+  };
+
+  const handleRecalibrateModel = (offsetC: number) => {
+    setPilotConfig((prev) => ({ ...prev, calibration_offset_c: offsetC }));
+    appendAudit('QSPR Model Recalibrated', `Applied ${offsetC}°C thermal offset from ${labRecords.length} lab batches`);
+  };
+
   const ppds = chemistries.filter((c) => c.category === 'PPD');
   const dems = chemistries.filter((c) => c.category === 'Demulsifier');
 
@@ -241,6 +363,27 @@ export default function App() {
           >
             <Beaker size={16} /> Lab Screening &amp; SOPs
           </a>
+          <a
+            href={`#${TAB_SLUGS.admin}`}
+            className={`nav-tab ${activeTab === 'admin' ? 'active' : ''}`}
+            style={{ textDecoration: 'none' }}
+            onClick={(e) => {
+              e.preventDefault();
+              switchTab('admin');
+            }}
+          >
+            <ShieldCheck size={16} /> Admin Console
+          </a>
+          <select
+            className="role-select"
+            aria-label="Active RBAC Role"
+            value={role}
+            onChange={(e) => setRole(e.target.value as UserRole)}
+          >
+            <option value="PSU Pilot Admin">Role: PSU Pilot Admin</option>
+            <option value="Installation Chemist">Role: Installation Chemist</option>
+            <option value="GGS Operator">Role: GGS Operator</option>
+          </select>
         </nav>
       </header>
 
@@ -395,6 +538,14 @@ export default function App() {
               <button className="btn btn-primary" onClick={handleAutoOptimize}>
                 <Sparkles size={16} /> Auto-Optimize Indigenous Formulation
               </button>
+              <button className="btn btn-secondary" style={{ marginTop: '0.55rem' }} onClick={handleSubmitForApproval}>
+                <Send size={15} /> Submit for PSU Pilot Approval
+              </button>
+              {approvalNotice && (
+                <div className="banner" style={{ marginTop: '0.65rem', marginBottom: 0, padding: '0.55rem 0.75rem', fontSize: '0.78rem' }}>
+                  {approvalNotice}
+                </div>
+              )}
             </section>
 
             <div>
@@ -700,6 +851,24 @@ export default function App() {
               </div>
             </section>
           </div>
+        )}
+
+        {activeTab === 'admin' && (
+          <AdminConsole
+            role={role}
+            presets={presets}
+            onAddPreset={handleAddPreset}
+            onDeletePreset={handleDeletePreset}
+            chemistries={chemistries}
+            onUpdateChemistry={handleUpdateChemistry}
+            pilotConfig={pilotConfig}
+            onUpdatePilotConfig={handleUpdatePilotConfig}
+            approvals={approvals}
+            onResolveApproval={handleResolveApproval}
+            labRecords={labRecords}
+            auditLogs={auditLogs}
+            onRecalibrateModel={handleRecalibrateModel}
+          />
         )}
       </main>
 

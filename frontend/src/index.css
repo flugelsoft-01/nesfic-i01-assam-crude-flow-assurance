@@ -368,3 +368,45 @@ th {
   color: var(--text-muted);
   line-height: 1.45;
 }
+
+.role-select {
+  background: #f8fafc;
+  border: 1px solid var(--border-accent);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-subtabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.15rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.75rem;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.76rem;
+  border-radius: 6px;
+}
+
+.btn-approve {
+  background: #059669;
+  color: #ffffff;
+}
+
+.btn-reject {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.admin-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.15rem;
+}
+
