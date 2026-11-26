@@ -8,10 +8,13 @@
     "dev": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy",
     "deploy:dry-run": "npm run build && wrangler deploy --dry-run",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "generate:images": "node scripts/chrome_gemini_bot.js --force",
+    "build:pdfs": "backend/.venv/bin/python3 scripts/generate_pdfs.py"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
+    "puppeteer-core": "^24.0.0",
     "wrangler": "^4.0.0"
   }
 }

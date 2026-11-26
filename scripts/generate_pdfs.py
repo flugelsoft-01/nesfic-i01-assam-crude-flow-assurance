@@ -344,9 +344,11 @@ def generate_proposal_pdf(mech_path: Path, roadmap_path: Path):
     story.append(meta_table)
     story.append(Spacer(1, 8))
 
-    before_after = ASSETS / "before_after_pipeline.jpg"
+    before_after = ASSETS / "infographic_01_winter_flow_assurance.jpg"
+    if not before_after.exists():
+        before_after = ASSETS / "before_after_pipeline.jpg"
     if before_after.exists():
-        story.append(Image(str(before_after), width=172 * mm, height=96 * mm))
+        story.append(Image(str(before_after), width=172 * mm, height=96.75 * mm))
         story.append(Paragraph("Figure 1: Layman overview comparing current winter flow-assurance bottlenecks vs. the ParaFlow-NE indigenous solution.", styles["Caption"]))
 
     md_text = (ROOT / "docs" / "proposal_nesfic_i01.md").read_text(encoding="utf-8")
@@ -404,14 +406,22 @@ def generate_proposal_pdf(mech_path: Path, roadmap_path: Path):
             )
             story.append(t)
 
-        if title.startswith("2.") and mech_path.exists():
-            story.append(Spacer(1, 6))
-            story.append(Image(str(mech_path), width=172 * mm, height=68 * mm))
-            story.append(Paragraph("Figure 2: Dual-action chemistry mechanism — how ParaFlow PPD stops wax gelation and ParaBreak separates water at 40°C.", styles["Caption"]))
-        if title.startswith("6.") and roadmap_path.exists():
-            story.append(Spacer(1, 6))
-            story.append(Image(str(roadmap_path), width=172 * mm, height=61 * mm))
-            story.append(Paragraph("Figure 3: 18-month Upper Assam winter pilot schedule and indicative ₹40 Lakh grant allocation.", styles["Caption"]))
+        if title.startswith("2."):
+            chem_img = ASSETS / "infographic_02_dual_chemistry_framework.jpg"
+            if not chem_img.exists():
+                chem_img = mech_path
+            if chem_img.exists():
+                story.append(Spacer(1, 6))
+                story.append(Image(str(chem_img), width=172 * mm, height=96.75 * mm if chem_img.suffix == ".jpg" else 68 * mm))
+                story.append(Paragraph("Figure 2: Dual-action chemistry mechanism — how ParaFlow PPD stops wax gelation and ParaBreak separates water at 40°C.", styles["Caption"]))
+        if title.startswith("6."):
+            road_img = ASSETS / "infographic_04_pilot_roadmap_impact.jpg"
+            if not road_img.exists():
+                road_img = roadmap_path
+            if road_img.exists():
+                story.append(Spacer(1, 6))
+                story.append(Image(str(road_img), width=172 * mm, height=96.75 * mm if road_img.suffix == ".jpg" else 61 * mm))
+                story.append(Paragraph("Figure 3: 18-month Upper Assam winter pilot schedule and indicative ₹40 Lakh grant allocation.", styles["Caption"]))
 
     story.append(Spacer(1, 10))
     story.append(
@@ -455,7 +465,10 @@ def generate_pow_pdf(arch_path: Path, savings_path: Path, charts_path: Path):
     story.append(PageBreak())
 
     story.append(Paragraph("2. System Architecture &amp; Live MVP Screenshot", styles["SectionHead"]))
-    story.append(Image(str(arch_path), width=172 * mm, height=67 * mm))
+    arch_img = ASSETS / "infographic_03_digital_twin_architecture.jpg"
+    if not arch_img.exists():
+        arch_img = arch_path
+    story.append(Image(str(arch_img), width=172 * mm, height=96.75 * mm if arch_img.suffix == ".jpg" else 67 * mm))
     story.append(Spacer(1, 5))
     screenshot_path = Path(
         "/Users/kalyan/.gemini/antigravity/brain/d4ddbf68-980e-48b9-86f6-136ea89586a5/browser_evidence/fa868feb-d2f1-44e7-9034-3325da4be2d9/final_step_12.png"
