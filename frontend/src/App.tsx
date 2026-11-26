@@ -409,7 +409,7 @@ export default function App() {
                   <div className="kpi-grid">
                     <div className="kpi-card">
                       <div className="kpi-label">Treated Pour Point</div>
-                      <div className="kpi-value" style={{ color: simResult.sub_4c_compliant ? '#34d399' : '#fb7185' }}>
+                      <div className="kpi-value" style={{ color: simResult.sub_4c_compliant ? '#059669' : '#e11d48' }}>
                         {simResult.pour_point_treated_c}°C
                       </div>
                       <div className="kpi-sub">
@@ -425,7 +425,7 @@ export default function App() {
                       <div className="kpi-label">Dehydrated BS&amp;W</div>
                       <div
                         className="kpi-value"
-                        style={{ color: simResult.refinery_spec_compliant ? '#34d399' : '#fb7185' }}
+                        style={{ color: simResult.refinery_spec_compliant ? '#059669' : '#e11d48' }}
                       >
                         {simResult.bsw_pct}%
                       </div>
@@ -439,7 +439,7 @@ export default function App() {
 
                     <div className="kpi-card">
                       <div className="kpi-label">Restart Pressure</div>
-                      <div className="kpi-value" style={{ color: '#22d3ee' }}>
+                      <div className="kpi-value" style={{ color: '#0891b2' }}>
                         {simResult.restart_pressure_treated_bar} bar
                       </div>
                       <div className="kpi-sub">
@@ -450,7 +450,7 @@ export default function App() {
 
                     <div className="kpi-card">
                       <div className="kpi-label">Fuel-Gas &amp; CO₂ Saved</div>
-                      <div className="kpi-value" style={{ color: '#fbbf24' }}>
+                      <div className="kpi-value" style={{ color: '#d97706' }}>
                         {simResult.fuel_gas_saved_pct}%
                       </div>
                       <div className="kpi-sub">
@@ -461,7 +461,7 @@ export default function App() {
 
                     <div className="kpi-card">
                       <div className="kpi-label">Landed Chemical Cost</div>
-                      <div className="kpi-value" style={{ color: '#34d399' }}>
+                      <div className="kpi-value" style={{ color: '#059669' }}>
                         ₹{simResult.landed_cost_inr_per_tonne}
                       </div>
                       <div className="kpi-sub">
@@ -482,15 +482,15 @@ export default function App() {
                       <div style={{ width: '100%', height: 290 }}>
                         <ResponsiveContainer>
                           <LineChart data={simResult.profile_points}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                             <XAxis
                               dataKey="distance_km"
-                              stroke="#94a3b8"
+                              stroke="#475569"
                               tickFormatter={(v) => `${v} km`}
                             />
-                            <YAxis stroke="#94a3b8" />
+                            <YAxis stroke="#475569" />
                             <Tooltip
-                              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc' }}
+                              contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a' }}
                             />
                             <Legend />
                             <Line
@@ -522,15 +522,15 @@ export default function App() {
                       <div style={{ width: '100%', height: 290 }}>
                         <ResponsiveContainer>
                           <LineChart data={simResult.emulsion_curve}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                             <XAxis
                               dataKey="treating_temp_c"
-                              stroke="#94a3b8"
+                              stroke="#475569"
                               tickFormatter={(v) => `${v}°C`}
                             />
-                            <YAxis stroke="#94a3b8" domain={[0, 'auto']} />
+                            <YAxis stroke="#475569" domain={[0, 'auto']} />
                             <Tooltip
-                              contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc' }}
+                              contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', color: '#0f172a' }}
                             />
                             <Legend />
                             <ReferenceLine y={0.5} stroke="#10b981" strokeDasharray="4 4" label="0.5% Spec" />
