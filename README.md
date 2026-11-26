@@ -19,3 +19,17 @@ cd frontend && npm run dev -- --host 127.0.0.1 --port 5173
 # Run backend tests
 backend/.venv/bin/pytest -v backend/tests/test_engine.py
 ```
+
+## Cloudflare Workers Deployment (Full-Stack: SPA + `/api/*`)
+This repository is configured for **Cloudflare Workers with Static Assets** (`wrangler.jsonc` + `worker/src/index.ts`):
+```bash
+# Authenticate with Cloudflare
+npx wrangler login
+
+# Preview build & packaging
+npm run deploy:dry-run
+
+# Deploy frontend + /api/* Worker to Cloudflare
+npm run deploy
+```
+

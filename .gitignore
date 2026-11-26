@@ -4,10 +4,12 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
-# Node / Frontend
+# Node / Frontend / Cloudflare
+node_modules/
 frontend/node_modules/
 frontend/dist/
 .vite/
+.wrangler/
 
 # OS / Editor
 .DS_Store
