@@ -30,6 +30,26 @@ import type {
   RecommendationResponse,
   SimulationResponse,
 } from './types';
+import {
+  CHEMISTRIES,
+  CRUDE_PRESETS,
+  INITIAL_LAB_RECORDS,
+  recommendLocally,
+  simulateLocally,
+} from './engine';
+
+async function fetchJsonOrFallback<T>(url: string, init: RequestInit | undefined, fallback: () => T): Promise<T> {
+  try {
+    const res = await fetch(url, init);
+    const ct = res.headers.get('content-type') || '';
+    if (!res.ok || !ct.includes('application/json')) {
+      return fallback();
+    }
+    return (await res.json()) as T;
+  } catch {
+    return fallback();
+  }
+}
 
 type TabKey = 'simulator' | 'chemistries' | 'lab';
 
@@ -72,9 +92,9 @@ export default function App() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/presets').then((r) => r.json()),
-      fetch('/api/chemistries').then((r) => r.json()),
-      fetch('/api/lab-records').then((r) => r.json()),
+      fetchJsonOrFallback('/api/presets', undefined, () => CRUDE_PRESETS),
+      fetchJsonOrFallback('/api/chemistries', undefined, () => CHEMISTRIES),
+      fetchJsonOrFallback('/api/lab-records', undefined, () => INITIAL_LAB_RECORDS),
     ]).then(([p, c, l]) => {
       setPresets(p);
       setChemistries(c);
@@ -86,44 +106,49 @@ export default function App() {
   useEffect(() => {
     if (!selectedCrude) return;
     setLoading(true);
-    fetch('/api/simulate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        crude: selectedCrude,
-        ambient_temp_c: ambientTemp,
-        inlet_temp_c: 42.0,
-        pipeline_length_km: pipelineLength,
-        flow_rate_m3_hr: flowRate,
-        pipe_diameter_in: 12.0,
-        treating_temp_c: treatingTemp,
-        ppd_id: ppdId,
-        ppd_dosage_ppm: ppdDosage,
-        demulsifier_id: demId,
-        demulsifier_dosage_ppm: demDosage,
-      }),
-    })
-      .then((r) => r.json())
-      .then((data: SimulationResponse) => {
-        setSimResult(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    const payload = {
+      crude: selectedCrude,
+      ambient_temp_c: ambientTemp,
+      inlet_temp_c: 42.0,
+      pipeline_length_km: pipelineLength,
+      flow_rate_m3_hr: flowRate,
+      pipe_diameter_in: 12.0,
+      treating_temp_c: treatingTemp,
+      ppd_id: ppdId,
+      ppd_dosage_ppm: ppdDosage,
+      demulsifier_id: demId,
+      demulsifier_dosage_ppm: demDosage,
+    };
+    fetchJsonOrFallback(
+      '/api/simulate',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      },
+      () => simulateLocally(payload),
+    ).then((data: SimulationResponse) => {
+      setSimResult(data);
+      setLoading(false);
+    });
   }, [selectedCrude, ambientTemp, pipelineLength, flowRate, treatingTemp, ppdId, ppdDosage, demId, demDosage]);
 
   const handleAutoOptimize = async () => {
     if (!selectedCrude) return;
-    const res = await fetch('/api/recommend', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        crude: selectedCrude,
-        target_pour_point_c: 2.0,
-        target_treating_temp_c: treatingTemp,
-        target_bsw_pct: 0.45,
-      }),
-    });
-    const rec: RecommendationResponse = await res.json();
+    const rec = await fetchJsonOrFallback(
+      '/api/recommend',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          crude: selectedCrude,
+          target_pour_point_c: 2.0,
+          target_treating_temp_c: treatingTemp,
+          target_bsw_pct: 0.45,
+        }),
+      },
+      () => recommendLocally(selectedCrude, 2.0, treatingTemp, 0.45),
+    );
     setRecResult(rec);
     setPpdId(rec.recommended_ppd.id);
     setPpdDosage(rec.optimal_ppd_dosage_ppm);
@@ -150,12 +175,15 @@ export default function App() {
       operator: newOperator,
       notes: 'Logged via ParaFlow-NE Digital Screening Protocol',
     };
-    const res = await fetch('/api/lab-records', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(record),
-    });
-    const saved = await res.json();
+    const saved = await fetchJsonOrFallback(
+      '/api/lab-records',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(record),
+      },
+      () => record,
+    );
     setLabRecords((prev) => [saved, ...prev]);
     setNewBatchId(`LAB-ASSAM-00${labRecords.length + 2}`);
   };
