@@ -324,7 +324,8 @@ def generate_proposal_pdf(mech_path: Path, roadmap_path: Path):
             ["Lead Applicant", "Kalyanjit Hatibaruah (Flugelsoft Labs)"],
             ["Region / Target", "Upper Assam (Tinsukia, Dibrugarh, Sivasagar, Charaideo, Jorhat), Arunachal, Tripura"],
             ["Pilot Scope", "12–18 Months (Full Winter Cycle) · 1 GGS + 1 Trunk Pipeline Segment"],
-            ["Repository", "paraflow-ne-flow-assurance"],
+            ["Live Prototype", "https://nesfic-i01-assam-crude-flow-assurance.pages.dev/"],
+            ["Repository", "https://github.com/flugelsoft-01/nesfic-i01-assam-crude-flow-assurance"],
         ],
         colWidths=[38 * mm, 134 * mm],
     )
