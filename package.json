@@ -10,7 +10,8 @@
     "deploy:dry-run": "npm run build && wrangler deploy --dry-run",
     "cf-typegen": "wrangler types",
     "generate:images": "node scripts/chrome_gemini_bot.js --force",
-    "build:pdfs": "backend/.venv/bin/python3 scripts/generate_pdfs.py"
+    "build:pdfs": "backend/.venv/bin/python3 scripts/generate_pdfs.py",
+    "automate:images": "bash scripts/run_image_pipeline.sh"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250101.0",
